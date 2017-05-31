@@ -11,11 +11,19 @@
 
 namespace hsm
 {
-struct event_not_supported_exception : std::exception
+struct unsupported_event : std::exception
 {
     virtual const char* what() const noexcept
     {
         return "event not supported (rt)";
+    }
+};
+
+struct unexpected_event : std::exception
+{
+    virtual const char* what() const noexcept
+    {
+        return "event not expected (rt)";
     }
 };
 

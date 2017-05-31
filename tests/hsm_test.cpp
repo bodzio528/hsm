@@ -21,27 +21,47 @@ TEST(StateMachineTest, primitive_events_can_be_used_as_transition_triggers)
                                               hsm::row_t<int, float, int>>>;
     sm sut;
 
-    sut.process_event(3);
-    sut.process_event('c');
-    // 5.0 is a double, not float:
-    ASSERT_THROW(sut.process_event(5.0), event_not_supported_exception);
-    ASSERT_NO_THROW(sut.process_event(3.0f));
+    ASSERT_NO_THROW(sut.process_event(int{}));
+    ASSERT_NO_THROW(sut.process_event(char{}));
+    ASSERT_NO_THROW(sut.process_event(float{}));
 }
 
-TEST(StateMachineTest, userdefined_initial_state_is_other_than_zeroth)
+TEST(StateMachineTest, initial_state_can_be_defined_by_user)
 {
     using sm = hsm::state_machine<float,
                                   hsm::rows_t<hsm::row_t<char, int, int>,
                                               hsm::row_t<int, int, float>,
                                               hsm::row_t<float, int, double>>>;
     sm sut;
-    sut.process_event(3);
+    ASSERT_NO_THROW(sut.process_event(int{}));
 }
 
-TEST(StateMachineTest, DISABLED_incoming_unexpected_event_throws_exception)
+TEST(StateMachineTest, when_incomming_unsupported_event__then_throw_exception)
 {
-    using sm = hsm::state_machine<int, hsm::rows_t<hsm::row_t<char, int, int>>>;
+    using sm = hsm::state_machine<int, hsm::rows_t<hsm::row_t<int, char, int>>>;
     sm sut;
-    ASSERT_THROW(sut.process_event(3.0), std::exception);
+
+    ASSERT_THROW(sut.process_event(double{}), unsupported_event);
 }
+
+TEST(StateMachineTest, when_incoming_known_unexpected_event__then_throw_exception)
+{
+    using sm = hsm::state_machine<
+        int,
+        hsm::rows_t<hsm::row_t<char, int, int>, hsm::row_t<int, float, int>>>;
+    sm sut;
+    ASSERT_THROW(sut.process_event(int{}), unexpected_event);
+}
+
+TEST(StateMachineTest,
+     when_transitions_conflict__then_first_in_apperance_is_taken)
+{
+    using sm = hsm::state_machine<int,
+                                  hsm::rows_t<hsm::row_t<char, int, int>,
+                                              hsm::row_t<int, int, float>,
+                                              hsm::row_t<int, int, double>>>;
+    sm sut;
+    ASSERT_NO_THROW(sut.process_event(int{}));
+}
+
 }  // namespace hsm
