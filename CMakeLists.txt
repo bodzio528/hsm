@@ -29,7 +29,9 @@ if(BUILD_COVERAGE_UNIT_TESTS)
     include(CodeCoverage)
 endif()
 
-# test targets
+# test library
 add_subdirectory(googletest-master)
-add_subdirectory(tests)
 
+# test targets
+enable_testing()
+add_subdirectory(tests)
