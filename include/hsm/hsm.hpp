@@ -10,6 +10,8 @@
 #include <experimental/optional>
 
 #include <boost/hana.hpp>
+//#include <boost/hana/experimental/printable.hpp>
+#include <boost/hana/ext/std/tuple.hpp>
 
 #include "hsm_exceptions.hpp"
 
@@ -19,12 +21,57 @@ namespace hana = boost::hana;
 
 using namespace hana::literals;
 
-template <class state, class event, class next>
+struct empty_guard
+{
+    template <class state_machine, class event, class state, class next>
+    bool operator()(state_machine const&,
+                    event const&,
+                    state const&,
+                    next const&) const
+    { /*
+         std::cout << "CALLED EMPTY_GUARD: "
+                   << " event = "
+                   << hana::experimental::print(hana::type_c<event>)
+                   << " state = "
+                   << hana::experimental::print(hana::type_c<state>)
+                   << " next  = "
+                   << hana::experimental::print(hana::type_c<next>) <<
+         std::endl;*/
+        return true;
+    }
+};
+
+struct empty_action
+{
+    template <class state_machine, class event, class state, class next>
+    void operator()(state_machine const&,
+                    event const&,
+                    state const&,
+                    next const&)
+    { /*
+         std::cout << "CALLED EMPTY_ACTION:"
+                   << " event = "
+                   << hana::experimental::print(hana::type_c<event>)
+                   << " state = "
+                   << hana::experimental::print(hana::type_c<state>)
+                   << " next  = "
+                   << hana::experimental::print(hana::type_c<next>) <<
+         std::endl;*/
+    }
+};
+
+template <class state,
+          class event,
+          class next,
+          class action = empty_action,
+          class guard = empty_guard>
 struct row_t
 {
     using state_t = state;
     using next_t = next;
     using event_t = event;
+    using action_t = action;
+    using guard_t = guard;
 };
 
 template <class... r>
@@ -51,6 +98,18 @@ class state_machine
     struct extract_next_state
     {
         using type = typename row::next_t;
+    };
+
+    template <class row>
+    struct extract_action
+    {
+        using type = typename row::action_t;
+    };
+
+    template <class row>
+    struct extract_guard
+    {
+        using type = typename row::guard_t;
     };
 
     using aux_unique_states_t = decltype(hana::to_tuple(hana::union_(
@@ -84,7 +143,7 @@ public:
     state_machine() : m_current_state(get_state_index<initial_state>()) {}
 
     template <class event>
-    void process_event(event&&)
+    void process_event(event&& evt)
     {
         auto event_transitions = hana::filter(stt{}, [](auto&& tt) {
             return hana::metafunction<extract_event>(tt) == hana::type_c<event>;
@@ -95,21 +154,39 @@ public:
         }
 
         bool transition_found = false;
-        hana::for_each(event_transitions, [this, &transition_found](auto&& tt) {
-            using origin_state = typename decltype(
-                hana::metafunction<extract_origin_state>(tt))::type;
-            using next_state = typename decltype(
-                hana::metafunction<extract_next_state>(tt))::type;
+        hana::for_each(
+            event_transitions, [this, &transition_found, &evt](auto&& tt) {
+                using origin_state = typename decltype(
+                    hana::metafunction<extract_origin_state>(tt))::type;
 
-            if (not transition_found and
-                m_current_state == state_machine::get_state_index<origin_state>()) {
-                if (true /*TODO check guard G: fsm event origin next -> bool */) {
-                    transition_found = true;
-                    /* TODO call action A: fsm event origin next -> void */
-                    m_current_state = state_machine::get_state_index<next_state>();
+                using next_state = typename decltype(
+                    hana::metafunction<extract_next_state>(tt))::type;
+
+                using action = typename decltype(
+                    hana::metafunction<extract_action>(tt))::type;
+
+                using guard = typename decltype(
+                    hana::metafunction<extract_guard>(tt))::type;
+
+                if (not transition_found and
+                    m_current_state ==
+                        state_machine::get_state_index<origin_state>()) {
+                    if (guard()(*this,
+                                evt,
+                                std::get<origin_state>(m_states),
+                                std::get<next_state>(m_states))) {
+                        transition_found = true;
+                        action()(*this,
+                                 evt,
+                                 std::get<origin_state>(m_states),
+                                 std::get<next_state>(m_states));
+                        m_current_state =
+                            state_machine::get_state_index<next_state>();
+                    } else {
+                        throw guard_reject();
+                    }
                 }
-            }
-        });
+            });
 
         if (not transition_found) {
             throw unexpected_event();

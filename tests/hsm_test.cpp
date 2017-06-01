@@ -44,7 +44,8 @@ TEST(StateMachineTest, when_incomming_unsupported_event__then_throw_exception)
     ASSERT_THROW(sut.process_event(double{}), unsupported_event);
 }
 
-TEST(StateMachineTest, when_incoming_known_unexpected_event__then_throw_exception)
+TEST(StateMachineTest,
+     when_incoming_known_unexpected_event__then_throw_exception)
 {
     using sm = hsm::state_machine<
         int,
@@ -63,5 +64,4 @@ TEST(StateMachineTest,
     sm sut;
     ASSERT_NO_THROW(sut.process_event(int{}));
 }
-
 }  // namespace hsm

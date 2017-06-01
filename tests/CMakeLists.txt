@@ -2,7 +2,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(TEST_SOURCES
     hsm_test.cpp
-#    examplest.cpp
+    hsm_action_test.cpp
+    hsm_guard_test.cpp
 )
 
 set(UT_DRIVER hsm_UT)

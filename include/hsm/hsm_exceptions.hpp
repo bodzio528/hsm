@@ -27,4 +27,11 @@ struct unexpected_event : std::exception
     }
 };
 
+struct guard_reject : std::exception
+{
+    virtual const char* what() const noexcept
+    {
+        return "transition rejected by guard condition (rt)";
+    }
+};
 }  // namespace hsm
