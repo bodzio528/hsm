@@ -15,10 +15,11 @@ using namespace testing;
 
 namespace
 {
-struct
+struct CallMock
 {
     MOCK_METHOD0(call, bool());
-} call_mock;
+};
+std::unique_ptr<CallMock> call_mock = nullptr;
 }  // namespace
 
 struct some_guard
@@ -26,13 +27,18 @@ struct some_guard
     template <class sm>
     bool operator()(sm const&, int const&, char const&, int const&)
     {
-        return call_mock.call();
+        return call_mock->call();
     }
 };
 
 struct StateMachineGuardTest : Test
 {
-    void TearDown() override { Mock::VerifyAndClearExpectations(&call_mock); }
+    void SetUp() override { call_mock = std::make_unique<CallMock>(); }
+    void TearDown() override
+    {
+        EXPECT_TRUE(Mock::VerifyAndClearExpectations(call_mock.get()));
+        call_mock.reset();
+    }
 
     using sm = hsm::state_machine<
         char,
@@ -43,14 +49,14 @@ struct StateMachineGuardTest : Test
 
 TEST_F(StateMachineGuardTest, test_guard_passing)
 {
-    EXPECT_CALL(call_mock, call()).WillOnce(Return(true));
+    EXPECT_CALL(*call_mock, call()).WillOnce(Return(true));
 
     ASSERT_NO_THROW(sut.process_event(int{}));
 }
 
 TEST_F(StateMachineGuardTest, test_guard_blocking)
 {
-    EXPECT_CALL(call_mock, call()).WillOnce(Return(false));
+    EXPECT_CALL(*call_mock, call()).WillOnce(Return(false));
 
     ASSERT_THROW(sut.process_event(int{}), guard_reject);
 }

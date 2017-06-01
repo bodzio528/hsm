@@ -6,6 +6,8 @@ set(TEST_SOURCES
     hsm_guard_test.cpp
 )
 
+set(MOCK_LIST)
+
 set(UT_DRIVER hsm_UT)
 add_executable(${UT_DRIVER} ${TEST_SOURCES} ${MOCK_LIST})
 target_link_libraries(${UT_DRIVER} hsm gtest_main gmock)

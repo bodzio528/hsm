@@ -15,10 +15,11 @@ using namespace testing;
 
 namespace
 {
-struct
+struct CallMock
 {
     MOCK_METHOD0(call, void());
-} call_mock;
+};
+std::unique_ptr<CallMock> call_mock = nullptr;
 }  // namespace
 
 struct some_guard
@@ -26,14 +27,22 @@ struct some_guard
     template <class sm>
     void operator()(sm const&, int const&, char const&, int const&)
     {
-        call_mock.call();
+        call_mock->call();
     }
 };
 
 struct StateMachineActionTest : Test
 {
-    void SetUp() override { EXPECT_CALL(call_mock, call()).Times(1); }
-    void TearDown() override { Mock::VerifyAndClearExpectations(&call_mock); }
+    void SetUp() override
+    {
+        call_mock = std::make_unique<CallMock>();
+        EXPECT_CALL(*call_mock, call()).Times(1);
+    }
+    void TearDown() override
+    {
+        EXPECT_TRUE(Mock::VerifyAndClearExpectations(call_mock.get()));
+        call_mock.reset();
+    }
 
     using sm =
         hsm::state_machine<char,
