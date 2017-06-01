@@ -8,9 +8,6 @@ project(HSM LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 find_package(Hana REQUIRED)
-if(NOT Hana_FOUND)
-    message(FATAL_ERROR "Hana library not found in the system. Aborting.")
-endif()
 
 set(TARGET_NAME hsm)
 
