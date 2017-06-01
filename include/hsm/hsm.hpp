@@ -7,10 +7,7 @@
 
 #pragma once
 
-#include <experimental/optional>
-
 #include <boost/hana.hpp>
-//#include <boost/hana/experimental/printable.hpp>
 #include <boost/hana/ext/std/tuple.hpp>
 
 #include "hsm_exceptions.hpp"
@@ -28,15 +25,7 @@ struct empty_guard
                     event const&,
                     state const&,
                     next const&) const
-    { /*
-         std::cout << "CALLED EMPTY_GUARD: "
-                   << " event = "
-                   << hana::experimental::print(hana::type_c<event>)
-                   << " state = "
-                   << hana::experimental::print(hana::type_c<state>)
-                   << " next  = "
-                   << hana::experimental::print(hana::type_c<next>) <<
-         std::endl;*/
+    {
         return true;
     }
 };
@@ -48,15 +37,7 @@ struct empty_action
                     event const&,
                     state const&,
                     next const&)
-    { /*
-         std::cout << "CALLED EMPTY_ACTION:"
-                   << " event = "
-                   << hana::experimental::print(hana::type_c<event>)
-                   << " state = "
-                   << hana::experimental::print(hana::type_c<state>)
-                   << " next  = "
-                   << hana::experimental::print(hana::type_c<next>) <<
-         std::endl;*/
+    {
     }
 };
 
