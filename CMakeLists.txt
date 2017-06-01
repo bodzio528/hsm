@@ -17,7 +17,7 @@ set(TARGET_NAME hsm)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
-add_compile_options(-Wall -pedantic)
+add_compile_options(-Wall -pedantic -std=c++14)
 
 set(TARGET_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/include/hsm/hsm.hpp
